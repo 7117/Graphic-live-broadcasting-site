@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>websocket client</title>
+    <style type="text/css">
+        .container {
+            border: #ccc solid 1px;
+        }
+
+        .up {
+            width: 100%;
+            height: 200px;
+        }
+
+        .down {
+            width: 100%;
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="up" id="chatrecord">
+    </div>
+    <hr>
+    <div class="down">
+        聊天类型：
+        <select id="chattype">
+            <option value="publicchat">公聊</option>
+            <option value="privatechat">私聊</option>
+        </select>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        对
+        <select id="chatto">
+        </select>
+        说:<input type="text" id="chatmsg" placeholder="聊聊天">
+        <input type="button" id="btnsend" value="发送">
+    </div>
+</div>
+</body>
+<script src="http://libs.baidu.com/jquery/2.1.4/jquery.min.js"></script>
+<script type="text/javascript">
+
+    $(document).ready(function () {
+        var ws;
+
+        ws = new WebSocket("ws://chat.room.com:8811");
+
+        ws.onopen = function (evt) {
+            if (ws.readyState == 1) {
+                $("#chatrecord").append("<p>" + '这是来自客户端的欢迎' + "</p>");
+            }
+        }
+
+        ws.onmessage = function (event) {
+
+            var data = $.parseJSON(event.data);
+
+            $("#chatrecord").append("<p>" + data.msg + "</p>");
+
+            console.log(data.total.length);
+            console.log($("#chatto option").length);
+
+            $(data.total).each(function (k, v) {
+                if( data.total.length > $("#chatto option").length){
+                    $("#chatto").append("<option id='k'>" + v + "</option>");
+                }
+            })
+        }
+
+        ws.onclose = function (event) {
+            $("#chatrecord").append("<p>" + 关闭 + "</p>");
+        }
+
+        ws.onerror = function (event) {
+            $("#chatrecord").append("<p>" + event.data + "</p>");
+        }
+
+        $("#btnsend").click(function sendMsg() {
+            var chatmsg = $("#chatmsg").val();
+            var chattype = $("#chattype").val();
+            var chatto = $("#chatto").val();
+            var msg = JSON.stringify({"chattype": chattype, "chatto": chatto, "chatmsg": chatmsg});
+            if (msg != "" && chatmsg != "") {
+                ws.send(msg);
+                $("#chatmsg").val("");
+            }
+        })
+
+    })
+</script>
+</html>
